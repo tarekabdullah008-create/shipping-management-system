@@ -32,7 +32,16 @@
 import {initializeApp} from "https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js";
 import {getAuth,signInWithEmailAndPassword,onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js";
 import {getDatabase,ref,push,set,update,remove,onValue,query,orderByChild,equalTo} from "https://www.gstatic.com/firebasejs/13.0.0/firebase-database.js";
-const firebaseConfig={apiKey:"AIzaSyA1GG2CJ-gCT0BhzFFemhIhX1gNWkx1e3Q0",authDomain:"super-nova-shipping.firebaseapp.com",databaseURL:"https://super-nova-shipping-default-rtdb.europe-west1.firebasedatabase.app",projectId:"super-nova-shipping",storageBucket:"super-nova-shipping.firebasestorage.app",messagingSenderId:"1085409997914",appId:"1:1085409997914:web:7832f0b453da17ba059463",measurementId:"G-N20GL5N57J"};
+const firebaseConfig = {
+  apiKey: "AIzaSyA1GG2CJ-gCT0BhzFFemhIhX1gNWkx1e3Q0",
+  authDomain: "super-nova-shipping.firebaseapp.com",
+  databaseURL: "https://super-nova-shipping-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "super-nova-shipping",
+  storageBucket: "super-nova-shipping.firebasestorage.app",
+  messagingSenderId: "1085409997914",
+  appId: "1:1085409997914:web:edce5d37b9f15a6d059463",
+  measurementId: "G-F9GT9Q6BX0"
+};
 const OWNER_UID="rD95y2DvUWMhW6kX7VnONsnV49G2";const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getDatabase(app);const $=id=>document.getElementById(id);let shipments=[],riders={},payments=[],finances=[],stops=[];const today=new Date().toLocaleDateString("en-CA");$("paymentDate").value=today;$("financeDate").value=today;
 function msg(t,err=false){$("message").hidden=false;$("message").textContent=t;$("message").style.background=err?"#fee2e2":"#dcfce7";$("message").style.color=err?"#991b1b":"#166534";window.scrollTo({top:0,behavior:"smooth"})}function clearMsg(){$("message").hidden=true}function stopAll(){stops.forEach(fn=>fn());stops=[]}function listen(path,cb,queryRef=null){const unsub=onValue(queryRef||ref(db,path),cb,e=>msg("خطأ في قراءة البيانات: "+e.message,true));stops.push(unsub)}function money(n){return (Number(n)||0).toLocaleString("en-US",{maximumFractionDigits:2})+" ج.م"}function cell(tr,value){const td=document.createElement("td");td.textContent=value??"";tr.appendChild(td);return td}function row(tbody,values){const tr=document.createElement("tr");values.forEach(v=>cell(tr,v));tbody.appendChild(tr);return tr}function safeName(uid){return riders[uid]?.name||"غير محدد"}function commission(rider,shipment){if(!rider||shipment.status!=="تم التسليم")return 0;const v=Number(rider.commissionValue)||0;return rider.commissionType==="percent"?(Number(shipment.amount)||0)*v/100:v}function paid(uid){return payments.filter(p=>p.riderUid===uid).reduce((n,p)=>n+Number(p.amount||0),0)}function earned(uid){return shipments.filter(s=>s.riderUid===uid).reduce((n,s)=>n+commission(riders[uid],s),0)}
 function showSection(id,group){document.querySelectorAll("."+group).forEach(el=>el.classList.add("hidden"));$(id)?.classList.remove("hidden");const nav=group==="owner-section"?"ownerNav":group==="rider-section"?"riderNav":"";if(nav)$(nav).querySelectorAll("button[data-section]").forEach(b=>b.classList.toggle("active",b.dataset.section===id));}
