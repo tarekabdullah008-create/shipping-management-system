@@ -9,24 +9,24 @@
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#172033}
 header{background:#101c35;color:white;padding:22px;text-align:center}
-header h1{margin:0 0 8px}
-main{max-width:1100px;margin:22px auto;padding:15px}
-.card,form,.panel{background:white;padding:18px;border-radius:12px;box-shadow:0 2px 10px #0000000b}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:20px}
-.stats strong{display:block;font-size:25px;margin-top:10px}
-.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+main{max-width:1200px;margin:20px auto;padding:12px}
+.panel,.card,form{background:white;padding:16px;border-radius:12px;box-shadow:0 2px 10px #0000000b;margin-bottom:16px}
+.fields,.stats,.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
 label{display:block;font-weight:bold;margin:10px 0 6px}
 input,select,button{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:8px;font-size:15px}
 button{background:#1769e0;color:white;border:0;font-weight:bold;cursor:pointer;margin-top:12px}
 .secondary{background:#475569}
 .danger{background:#dc3545;margin:0;padding:7px}
-.table-wrap{overflow-x:auto;margin-top:15px}
+.stats strong{display:block;font-size:23px;margin-top:8px}
+.table-wrap{overflow-x:auto;margin-top:12px}
 table{width:100%;border-collapse:collapse;background:white}
 th,td{padding:10px;border-bottom:1px solid #e2e8f0;text-align:right;white-space:nowrap}
 th{background:#e8eef8}
 .notice{font-size:13px;color:#64748b;line-height:1.7}
 #app{display:none}
 #message{padding:12px;border-radius:8px;margin:12px 0;white-space:pre-wrap}
+h2{font-size:20px}
+.hidden{display:none!important}
 </style>
 </head>
 <body>
@@ -34,252 +34,360 @@ th{background:#e8eef8}
 <h1>SUPER NOVA</h1>
 <p>نظام إدارة شركة الشحن</p>
 </header>
-
 <main>
 <div id="message" hidden></div>
 
 <section id="login" class="panel">
 <h2>تسجيل الدخول</h2>
-<p class="notice">سجّل الدخول بالإيميل وكلمة السر المسجلين في Firebase Authentication.</p>
 <form id="loginForm">
-<label for="email">البريد الإلكتروني</label>
+<label>البريد الإلكتروني</label>
 <input id="email" type="email" autocomplete="username" required>
-<label for="password">كلمة السر</label>
+<label>كلمة السر</label>
 <input id="password" type="password" autocomplete="current-password" required>
-<button type="submit">تسجيل الدخول</button>
+<button>دخول النظام</button>
 </form>
 </section>
 
 <section id="app">
-<div style="text-align:left;margin-bottom:15px">
-<button id="logout" class="secondary" style="max-width:180px">تسجيل الخروج</button>
-</div>
+<button id="logout" class="secondary">تسجيل الخروج</button>
+<h2 id="welcome">لوحة التحكم</h2>
 
+<section id="ownerPanel" class="hidden">
 <div class="stats">
 <div class="card">إجمالي الشحنات<strong id="total">0</strong></div>
 <div class="card">تم التسليم<strong id="delivered">0</strong></div>
 <div class="card">قيد التوصيل<strong id="pending">0</strong></div>
 <div class="card">المرتجعات<strong id="returned">0</strong></div>
+<div class="card">إجمالي الإيرادات<strong id="incomeTotal">0</strong></div>
+<div class="card">إجمالي المصروفات<strong id="expenseTotal">0</strong></div>
+</div>
+
+<form id="riderForm">
+<h2>إضافة مندوب أو تعديل حسابه</h2>
+<p class="notice">أنشئ حساب المندوب أولًا في Firebase Authentication، ثم انسخ UID الخاص به هنا. لإضافة مندوب جديد استخدم UID جديدًا.</p>
+<div class="fields">
+<div><label>اسم المندوب</label><input id="riderName" required></div>
+<div><label>UID حساب المندوب</label><input id="riderUid" required></div>
+<div><label>نوع العمولة</label>
+<select id="commissionType">
+<option value="fixed">مبلغ ثابت لكل شحنة مسلّمة</option>
+<option value="percent">نسبة من التحصيل</option>
+</select></div>
+<div><label>قيمة العمولة</label><input id="commissionValue" type="number" min="0" step="0.01" value="35" required></div>
+</div>
+<button>حفظ بيانات المندوب</button>
+</form>
+
+<div class="panel">
+<h2>حسابات المناديب</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>الاسم</th><th>UID</th><th>نوع العمولة</th><th>قيمة العمولة</th><th>المستحق</th><th>المدفوع</th><th>المتبقي</th></tr></thead>
+<tbody id="ridersTable"></tbody>
+</table></div>
 </div>
 
 <form id="shipmentForm">
 <h2>تسجيل شحنة جديدة</h2>
 <div class="fields">
-<div><label for="sender">اسم العميل أو التاجر</label><input id="sender" required></div>
-<div><label for="receiver">اسم المستلم</label><input id="receiver" required></div>
-<div><label for="phone">رقم هاتف المستلم</label><input id="phone" type="tel" required></div>
-<div><label for="address">عنوان التوصيل</label><input id="address" required></div>
-<div><label for="amount">مبلغ التحصيل بالجنيه</label><input id="amount" type="number" min="0" step="0.01" value="0" required></div>
-<div><label for="status">حالة الشحنة</label>
-<select id="status">
-<option>جديدة</option>
-<option>قيد التوصيل</option>
-<option>تم التسليم</option>
-<option>مرتجع</option>
-</select></div>
+<div><label>اسم العميل أو التاجر</label><input id="sender" required></div>
+<div><label>اسم المستلم</label><input id="receiver" required></div>
+<div><label>هاتف المستلم</label><input id="phone" type="tel" required></div>
+<div><label>عنوان التوصيل</label><input id="address" required></div>
+<div><label>مبلغ التحصيل بالجنيه</label><input id="amount" type="number" min="0" step="0.01" value="0" required></div>
+<div><label>المندوب</label><select id="shipmentRider"><option value="">بدون مندوب</option></select></div>
+<div><label>حالة الشحنة</label>
+<select id="status"><option>جديدة</option><option>قيد التوصيل</option><option>تم التسليم</option><option>مرتجع</option></select></div>
 </div>
-<button type="submit">حفظ الشحنة</button>
+<button>حفظ الشحنة</button>
 </form>
 
-<section style="margin-top:24px" class="panel">
-<h2>سجل الشحنات</h2>
-<input id="search" placeholder="ابحث بالعميل أو المستلم أو الهاتف أو رقم الشحنة">
-<div class="table-wrap">
-<table>
-<thead><tr>
-<th>رقم الشحنة</th><th>العميل</th><th>المستلم</th>
-<th>الهاتف</th><th>العنوان</th><th>التحصيل</th><th>الحالة</th><th>حذف</th>
-</tr></thead>
-<tbody id="shipments"></tbody>
-</table>
+<form id="paymentForm">
+<h2>تسجيل دفعة لمندوب</h2>
+<div class="fields">
+<div><label>المندوب</label><select id="paymentRider" required></select></div>
+<div><label>المبلغ المدفوع</label><input id="paymentAmount" type="number" min="0.01" step="0.01" required></div>
+<div><label>تاريخ الدفع</label><input id="paymentDate" type="date" required></div>
+<div><label>ملاحظات</label><input id="paymentNote"></div>
 </div>
-<p class="notice">تُحمّل البيانات من Firebase بعد تسجيل الدخول بنجاح.</p>
+<button>حفظ الدفعة</button>
+</form>
+
+<form id="financeForm">
+<h2>تسجيل إيراد أو مصروف</h2>
+<div class="fields">
+<div><label>نوع الحركة</label><select id="financeType"><option value="income">إيراد</option><option value="expense">مصروف</option></select></div>
+<div><label>البيان</label><input id="financeTitle" required></div>
+<div><label>المبلغ</label><input id="financeAmount" type="number" min="0.01" step="0.01" required></div>
+<div><label>التاريخ</label><input id="financeDate" type="date" required></div>
+</div>
+<button>حفظ الحركة المالية</button>
+</form>
+
+<div class="panel">
+<h2>سجل الشحنات</h2>
+<input id="search" placeholder="ابحث برقم الشحنة أو الاسم أو الهاتف">
+<div class="table-wrap"><table>
+<thead><tr><th>رقم الشحنة</th><th>العميل</th><th>المستلم</th><th>الهاتف</th><th>التحصيل</th><th>المندوب</th><th>الحالة</th><th>تعديل الحالة</th><th>حذف</th></tr></thead>
+<tbody id="shipmentsTable"></tbody>
+</table></div>
+</div>
+
+<div class="panel">
+<h2>سجل الدفعات</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>التاريخ</th><th>المندوب</th><th>المبلغ</th><th>ملاحظات</th></tr></thead>
+<tbody id="paymentsTable"></tbody>
+</table></div>
+</div>
+
+<div class="panel">
+<h2>سجل الإيرادات والمصروفات</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>التاريخ</th><th>النوع</th><th>البيان</th><th>المبلغ</th></tr></thead>
+<tbody id="financeTable"></tbody>
+</table></div>
+</div>
+</section>
+
+<section id="riderPanel" class="hidden">
+<div class="stats">
+<div class="card">شحناتي<strong id="myTotal">0</strong></div>
+<div class="card">الشحنات المسلّمة<strong id="myDelivered">0</strong></div>
+<div class="card">عمولتي المستحقة<strong id="myEarned">0</strong></div>
+<div class="card">اللي استلمته<strong id="myPaid">0</strong></div>
+<div class="card">المتبقي<strong id="myDue">0</strong></div>
+</div>
+<div class="panel">
+<h2>شحناتي</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>رقم الشحنة</th><th>المستلم</th><th>الهاتف</th><th>العنوان</th><th>التحصيل</th><th>الحالة</th></tr></thead>
+<tbody id="myShipments"></tbody>
+</table></div>
+</div>
+<div class="panel">
+<h2>دفعاتي</h2>
+<div class="table-wrap"><table>
+<thead><tr><th>التاريخ</th><th>المبلغ</th><th>ملاحظات</th></tr></thead>
+<tbody id="myPayments"></tbody>
+</table></div>
+</div>
 </section>
 </section>
 </main>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js";
-import {
-  getAuth, signInWithEmailAndPassword,
-  onAuthStateChanged, signOut
-} from "https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js";
-import {
-  getDatabase, ref, push, onValue, remove
-} from "https://www.gstatic.com/firebasejs/13.0.0/firebase-database.js";
+import {initializeApp} from "https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js";
+import {getAuth,signInWithEmailAndPassword,onAuthStateChanged,signOut}
+from "https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js";
+import {getDatabase,ref,push,set,update,remove,onValue,query,orderByChild,equalTo}
+from "https://www.gstatic.com/firebasejs/13.0.0/firebase-database.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyA1GG2CJ-gCT0BhzFFemIhX1gNWkx1e3Q0",
-  authDomain: "super-nova-shipping.firebaseapp.com",
-  databaseURL: "https://super-nova-shipping-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "super-nova-shipping",
-  storageBucket: "super-nova-shipping.firebasestorage.app",
-  messagingSenderId: "1085409997914",
-  appId: "1:1085409997914:web:7832f0b453da17ba059463",
-  measurementId: "G-N20GL5N57J"
+const firebaseConfig={
+apiKey:"AIzaSyA1GG2CJ-gCT0BhzFFemIhX1gNWkx1e3Q0",
+authDomain:"super-nova-shipping.firebaseapp.com",
+databaseURL:"https://super-nova-shipping-default-rtdb.europe-west1.firebasedatabase.app",
+projectId:"super-nova-shipping",
+storageBucket:"super-nova-shipping.firebasestorage.app",
+messagingSenderId:"1085409997914",
+appId:"1:1085409997914:web:7832f0b453da17ba059463",
+measurementId:"G-N20GL5N57J"
 };
 
-const OWNER_UID = "rD95y2DvUWMhW6kX7VnONsnV49G2";
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getDatabase(app);
+const OWNER_UID="rD95y2DvUWMhW6kX7VnONsnV49G2";
+const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getDatabase(app);
+const $=id=>document.getElementById(id);
+let shipments=[],riders={},payments=[],finances=[],stops=[];
+const today=new Date().toLocaleDateString("en-CA");
 
-const $ = id => document.getElementById(id);
-let shipments = [];
-let stopListening = null;
+$("paymentDate").value=today;
+$("financeDate").value=today;
 
-function message(text, error = false) {
-  $("message").hidden = false;
-  $("message").textContent = text;
-  $("message").style.background = error ? "#fee2e2" : "#dcfce7";
-  $("message").style.color = error ? "#991b1b" : "#166534";
+function msg(t,err=false){
+$("message").hidden=false;$("message").textContent=t;
+$("message").style.background=err?"#fee2e2":"#dcfce7";
+$("message").style.color=err?"#991b1b":"#166534";
 }
-function clearMessage() {
-  $("message").hidden = true;
+function clearMsg(){$("message").hidden=true}
+function stopAll(){stops.forEach(fn=>fn());stops=[]}
+function listen(path,cb,queryRef=null){
+const unsub=onValue(queryRef||ref(db,path),cb,e=>msg("خطأ في قراءة البيانات: "+e.message,true));
+stops.push(unsub);
 }
-function showApp(user) {
-  $("login").style.display = user ? "none" : "block";
-  $("app").style.display = user ? "block" : "none";
+function money(n){return (Number(n)||0).toLocaleString("en-US",{maximumFractionDigits:2})+" ج.م"}
+function cell(tr,value){
+const td=document.createElement("td");td.textContent=value??"";tr.appendChild(td);return td;
 }
-function showError(error) {
-  const messages = {
-    "auth/invalid-credential": "الإيميل أو كلمة السر غير صحيحة.",
-    "auth/invalid-email": "صيغة الإيميل غير صحيحة.",
-    "auth/too-many-requests": "محاولات كثيرة. حاول لاحقًا.",
-    "auth/network-request-failed": "تحقق من اتصال الإنترنت.",
-    "PERMISSION_DENIED": "الوصول مرفوض. راجع قواعد Firebase.",
-    "permission_denied": "الوصول مرفوض. راجع قواعد Firebase."
-  };
-  message(messages[error.code] || ("حصل خطأ: " + error.message), true);
+function row(tbody,values){
+const tr=document.createElement("tr");values.forEach(v=>cell(tr,v));tbody.appendChild(tr);return tr;
 }
+function safeName(uid){return riders[uid]?.name||"غير محدد"}
+function commission(rider,shipment){
+if(!rider||shipment.status!=="تم التسليم")return 0;
+const v=Number(rider.commissionValue)||0;
+return rider.commissionType==="percent"?(Number(shipment.amount)||0)*v/100:v;
+}
+function paid(uid){return payments.filter(p=>p.riderUid===uid).reduce((n,p)=>n+Number(p.amount||0),0)}
+function earned(uid){return shipments.filter(s=>s.riderUid===uid).reduce((n,s)=>n+commission(riders[uid],s),0)}
 
-$("loginForm").addEventListener("submit", async e => {
-  e.preventDefault();
-  clearMessage();
-  try {
-    await signInWithEmailAndPassword(auth, $("email").value.trim(), $("password").value);
-  } catch (error) {
-    showError(error);
-  }
+$("loginForm").addEventListener("submit",async e=>{
+e.preventDefault();clearMsg();
+try{await signInWithEmailAndPassword(auth,$("email").value.trim(),$("password").value)}
+catch(e){msg("تعذر تسجيل الدخول. راجع الإيميل وكلمة السر. "+e.message,true)}
+});
+$("logout").addEventListener("click",()=>signOut(auth));
+
+onAuthStateChanged(auth,async user=>{
+stopAll();shipments=[];payments=[];finances=[];riders={};
+$("login").style.display=user?"none":"block";
+$("app").style.display=user?"block":"none";
+$("ownerPanel").classList.add("hidden");
+$("riderPanel").classList.add("hidden");
+if(!user)return;
+if(user.uid===OWNER_UID){
+$("welcome").textContent="لوحة صاحب الشركة";
+$("ownerPanel").classList.remove("hidden");
+listen("riders",s=>{
+riders=s.val()||{};
+renderOwner();
+});
+listen("shipments",s=>{
+shipments=[];s.forEach(c=>shipments.push({key:c.key,...c.val()}));
+shipments.reverse();renderOwner();
+});
+listen("riderPayments",s=>{
+payments=[];s.forEach(c=>payments.push({key:c.key,...c.val()}));
+renderOwner();
+});
+listen("finances",s=>{
+finances=[];s.forEach(c=>finances.push({key:c.key,...c.val()}));
+renderOwner();
+});
+clearMsg();
+}else{
+try{
+const profile=await new Promise((resolve,reject)=>{
+const unsub=onValue(ref(db,"riders/"+user.uid),s=>{unsub();resolve(s.val())},e=>{unsub();reject(e)});
+});
+if(!profile){msg("الحساب غير مربوط بمندوب. تواصل مع صاحب الشركة لإضافته.",true);await signOut(auth);return}
+$("welcome").textContent="أهلًا "+(profile.name||"مندوب");
+$("riderPanel").classList.remove("hidden");
+listen("shipments",s=>{
+shipments=[];s.forEach(c=>shipments.push({key:c.key,...c.val()}));
+renderRider();
+},query(ref(db,"shipments"),orderByChild("riderUid"),equalTo(user.uid)));
+listen("riderPayments",s=>{
+payments=[];s.forEach(c=>payments.push({key:c.key,...c.val()}));
+renderRider();
+},query(ref(db,"riderPayments"),orderByChild("riderUid"),equalTo(user.uid)));
+clearMsg();
+}catch(e){msg("تعذر فتح حساب المندوب: "+e.message,true)}
+}
 });
 
-$("logout").addEventListener("click", async () => {
-  try { await signOut(auth); }
-  catch (error) { showError(error); }
+function renderOwner(){
+const list=Object.entries(riders);
+const fillSelect=(id,blank)=>{
+const el=$(id);el.replaceChildren();
+if(blank){const o=document.createElement("option");o.value="";o.textContent="بدون مندوب";el.appendChild(o)}
+list.forEach(([uid,r])=>{const o=document.createElement("option");o.value=uid;o.textContent=r.name||uid;el.appendChild(o)});
+};
+fillSelect("shipmentRider",true);fillSelect("paymentRider",false);
+
+$("total").textContent=shipments.length;
+$("delivered").textContent=shipments.filter(s=>s.status==="تم التسليم").length;
+$("pending").textContent=shipments.filter(s=>s.status==="قيد التوصيل").length;
+$("returned").textContent=shipments.filter(s=>s.status==="مرتجع").length;
+$("incomeTotal").textContent=money(finances.filter(f=>f.type==="income").reduce((n,f)=>n+Number(f.amount||0),0));
+$("expenseTotal").textContent=money(finances.filter(f=>f.type==="expense").reduce((n,f)=>n+Number(f.amount||0),0));
+
+const rt=$("ridersTable");rt.replaceChildren();
+list.forEach(([uid,r])=>row(rt,[r.name,uid,r.commissionType==="percent"?"نسبة مئوية":"مبلغ ثابت",r.commissionType==="percent"?r.commissionValue+"%":money(r.commissionValue),money(earned(uid)),money(paid(uid)),money(earned(uid)-paid(uid))]));
+
+const st=$("shipmentsTable");st.replaceChildren();
+const q=$("search").value.trim().toLowerCase();
+shipments.filter(s=>[s.id,s.sender,s.receiver,s.phone].some(v=>String(v||"").toLowerCase().includes(q))).forEach(s=>{
+const tr=row(st,[s.id,s.sender,s.receiver,s.phone,money(s.amount),safeName(s.riderUid),s.status]);
+const td=cell(tr,"");
+const sel=document.createElement("select");
+["جديدة","قيد التوصيل","تم التسليم","مرتجع"].forEach(v=>{const o=document.createElement("option");o.value=v;o.textContent=v;o.selected=v===s.status;sel.appendChild(o)});
+sel.addEventListener("change",async()=>{try{await update(ref(db,"shipments/"+s.key),{status:sel.value});msg("تم تحديث حالة الشحنة")}catch(e){msg(e.message,true)}});
+td.appendChild(sel);
+const del=cell(tr,"");const b=document.createElement("button");b.className="danger";b.textContent="حذف";
+b.onclick=async()=>{if(confirm("متأكد من حذف الشحنة؟"))try{await remove(ref(db,"shipments/"+s.key));msg("تم حذف الشحنة")}catch(e){msg(e.message,true)}};
+del.appendChild(b);
 });
-
-onAuthStateChanged(auth, user => {
-  if (stopListening) {
-    stopListening();
-    stopListening = null;
-  }
-  shipments = [];
-  render();
-
-  if (!user) {
-    showApp(null);
-    return;
-  }
-  if (user.uid !== OWNER_UID) {
-    showApp(null);
-    signOut(auth);
-    message("هذا الحساب غير مصرح له باستخدام النظام.", true);
-    return;
-  }
-
-  showApp(user);
-  clearMessage();
-  stopListening = onValue(ref(db, "shipments"), snapshot => {
-    shipments = [];
-    snapshot.forEach(child => {
-      shipments.push({ key: child.key, ...child.val() });
-    });
-    shipments.reverse();
-    render();
-  }, error => showError(error));
-});
-
-function render() {
-  const q = $("search").value.trim().toLowerCase();
-  const filtered = shipments.filter(s =>
-    [s.id, s.sender, s.receiver, s.phone, s.address, s.status]
-      .some(v => String(v || "").toLowerCase().includes(q))
-  );
-
-  const tbody = $("shipments");
-  tbody.replaceChildren();
-
-  for (const s of filtered) {
-    const tr = document.createElement("tr");
-    const values = [
-      s.id, s.sender, s.receiver, s.phone, s.address,
-      Number(s.amount || 0).toLocaleString("en-US") + " ج.م",
-      s.status
-    ];
-
-    for (const value of values) {
-      const td = document.createElement("td");
-      td.textContent = value ?? "";
-      tr.appendChild(td);
-    }
-
-    const td = document.createElement("td");
-    const btn = document.createElement("button");
-    btn.className = "danger";
-    btn.textContent = "حذف";
-    btn.addEventListener("click", async () => {
-      if (!confirm("متأكد إنك عايز تحذف الشحنة؟")) return;
-      try {
-        await remove(ref(db, "shipments/" + s.key));
-        message("تم حذف الشحنة.");
-      } catch (error) { showError(error); }
-    });
-    td.appendChild(btn);
-    tr.appendChild(td);
-    tbody.appendChild(tr);
-  }
-
-  $("total").textContent = shipments.length;
-  $("delivered").textContent = shipments.filter(s => s.status === "تم التسليم").length;
-  $("pending").textContent = shipments.filter(s => s.status === "قيد التوصيل").length;
-  $("returned").textContent = shipments.filter(s => s.status === "مرتجع").length;
+const pt=$("paymentsTable");pt.replaceChildren();
+payments.forEach(p=>row(pt,[p.date,safeName(p.riderUid),money(p.amount),p.note]));
+const ft=$("financeTable");ft.replaceChildren();
+finances.forEach(f=>row(ft,[f.date,f.type==="income"?"إيراد":"مصروف",f.title,money(f.amount)]));
 }
 
-$("shipmentForm").addEventListener("submit", async e => {
-  e.preventDefault();
-  clearMessage();
+function renderRider(){
+const uid=auth.currentUser?.uid;if(!uid)return;
+const mine=shipments.filter(s=>s.riderUid===uid);
+const myp=payments.filter(p=>p.riderUid===uid);
+const e=earned(uid),p=paid(uid);
+$("myTotal").textContent=mine.length;
+$("myDelivered").textContent=mine.filter(s=>s.status==="تم التسليم").length;
+$("myEarned").textContent=money(e);$("myPaid").textContent=money(p);$("myDue").textContent=money(e-p);
+const tb=$("myShipments");tb.replaceChildren();
+mine.forEach(s=>row(tb,[s.id,s.receiver,s.phone,s.address,money(s.amount),s.status]));
+const pb=$("myPayments");pb.replaceChildren();
+myp.forEach(x=>row(pb,[x.date,money(x.amount),x.note]));
+}
 
-  if (!auth.currentUser || auth.currentUser.uid !== OWNER_UID) {
-    message("سجّل الدخول بالحساب المصرح له أولًا.", true);
-    return;
-  }
-
-  const amount = Number($("amount").value);
-  if (!Number.isFinite(amount) || amount < 0) {
-    message("اكتب مبلغ تحصيل صحيح.", true);
-    return;
-  }
-
-  const shipment = {
-    id: "SN-" + Date.now().toString().slice(-8),
-    sender: $("sender").value.trim(),
-    receiver: $("receiver").value.trim(),
-    phone: $("phone").value.trim(),
-    address: $("address").value.trim(),
-    amount,
-    status: $("status").value,
-    createdAt: Date.now()
-  };
-
-  try {
-    await push(ref(db, "shipments"), shipment);
-    $("shipmentForm").reset();
-    $("amount").value = "0";
-    message("تم حفظ الشحنة في قاعدة البيانات بنجاح.");
-  } catch (error) { showError(error); }
+$("riderForm").addEventListener("submit",async e=>{
+e.preventDefault();
+if(auth.currentUser?.uid!==OWNER_UID)return;
+const uid=$("riderUid").value.trim();
+const name=$("riderName").value.trim();
+const commissionValue=Number($("commissionValue").value);
+if(!uid||!name||!Number.isFinite(commissionValue)||commissionValue<0){msg("راجع بيانات المندوب والعمولة",true);return}
+try{
+await set(ref(db,"riders/"+uid),{name,commissionType:$("commissionType").value,commissionValue});
+$("riderForm").reset();$("commissionValue").value="35";
+msg("تم حفظ بيانات المندوب");
+}catch(e){msg("تعذر الحفظ: "+e.message,true)}
 });
 
-$("search").addEventListener("input", render);
+$("shipmentForm").addEventListener("submit",async e=>{
+e.preventDefault();
+if(auth.currentUser?.uid!==OWNER_UID)return;
+const amount=Number($("amount").value);
+if(!Number.isFinite(amount)||amount<0){msg("مبلغ التحصيل غير صحيح",true);return}
+const shipment={
+id:"SN-"+Date.now().toString().slice(-8),
+sender:$("sender").value.trim(),receiver:$("receiver").value.trim(),
+phone:$("phone").value.trim(),address:$("address").value.trim(),
+amount,status:$("status").value,riderUid:$("shipmentRider").value||"",
+createdAt:Date.now()
+};
+try{await push(ref(db,"shipments"),shipment);$("shipmentForm").reset();$("amount").value="0";msg("تم حفظ الشحنة")}
+catch(e){msg("تعذر حفظ الشحنة: "+e.message,true)}
+});
+
+$("paymentForm").addEventListener("submit",async e=>{
+e.preventDefault();
+if(auth.currentUser?.uid!==OWNER_UID)return;
+const amount=Number($("paymentAmount").value),uid=$("paymentRider").value;
+if(!uid||!Number.isFinite(amount)||amount<=0){msg("راجع المندوب والمبلغ",true);return}
+try{
+await push(ref(db,"riderPayments"),{riderUid:uid,amount,date:$("paymentDate").value,note:$("paymentNote").value.trim(),createdAt:Date.now()});
+$("paymentForm").reset();$("paymentDate").value=today;msg("تم تسجيل الدفعة");
+}catch(e){msg("تعذر تسجيل الدفعة: "+e.message,true)}
+});
+
+$("financeForm").addEventListener("submit",async e=>{
+e.preventDefault();
+if(auth.currentUser?.uid!==OWNER_UID)return;
+const amount=Number($("financeAmount").value);
+if(!Number.isFinite(amount)||amount<=0){msg("اكتب مبلغ صحيح",true);return}
+try{
+await push(ref(db,"finances"),{type:$("financeType").value,title:$("financeTitle").value.trim(),amount,date:$("financeDate").value,createdAt:Date.now()});
+$("financeForm").reset();$("financeDate").value=today;msg("تم حفظ الحركة المالية");
+}catch(e){msg("تعذر حفظ الحركة: "+e.message,true)}
+});
+$("search").addEventListener("input",renderOwner);
 </script>
 </body>
 </html>
