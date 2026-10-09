@@ -1,209 +1,285 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Super Nova | إدارة الشحن</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f1f5f9;
-      color: #172033;
-    }
-    header {
-      background: #101c35;
-      color: white;
-      padding: 24px 16px;
-      text-align: center;
-    }
-    header h1 { margin: 0 0 8px; }
-    header p { margin: 0; color: #cbd5e1; }
-    main { max-width: 1000px; margin: 24px auto; padding: 16px; }
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-      gap: 12px;
-    }
-    .card, form {
-      background: white;
-      padding: 18px;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px #0000000b;
-    }
-    .card strong { display: block; font-size: 25px; margin-top: 10px; }
-    h2 { margin-top: 0; }
-    form { margin-top: 20px; }
-    .fields {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-      gap: 12px;
-    }
-    label { display: block; font-weight: bold; margin-bottom: 6px; }
-    input, select, button {
-      width: 100%;
-      padding: 12px;
-      border-radius: 8px;
-      border: 1px solid #cbd5e1;
-      font-size: 15px;
-    }
-    button {
-      border: 0;
-      background: #1769e0;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      margin-top: 14px;
-    }
-    .table-wrap { overflow-x: auto; margin-top: 20px; }
-    table { width: 100%; border-collapse: collapse; background: white; }
-    th, td { padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: right; }
-    th { background: #e8eef8; }
-    .delete { background: #dc3545; padding: 7px; margin: 0; }
-    .status { color: #1769e0; font-weight: bold; }
-    .notice { color: #64748b; font-size: 13px; line-height: 1.7; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SUPER NOVA | إدارة الشحن</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#172033}
+header{background:#101c35;color:white;padding:22px;text-align:center}
+header h1{margin:0 0 8px}
+main{max-width:1100px;margin:22px auto;padding:15px}
+.card,form,.panel{background:white;padding:18px;border-radius:12px;box-shadow:0 2px 10px #0000000b}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:20px}
+.stats strong{display:block;font-size:25px;margin-top:10px}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+label{display:block;font-weight:bold;margin:10px 0 6px}
+input,select,button{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:8px;font-size:15px}
+button{background:#1769e0;color:white;border:0;font-weight:bold;cursor:pointer;margin-top:12px}
+.secondary{background:#475569}
+.danger{background:#dc3545;margin:0;padding:7px}
+.table-wrap{overflow-x:auto;margin-top:15px}
+table{width:100%;border-collapse:collapse;background:white}
+th,td{padding:10px;border-bottom:1px solid #e2e8f0;text-align:right;white-space:nowrap}
+th{background:#e8eef8}
+.notice{font-size:13px;color:#64748b;line-height:1.7}
+#app{display:none}
+#message{padding:12px;border-radius:8px;margin:12px 0;white-space:pre-wrap}
+</style>
 </head>
 <body>
-  <header>
-    <h1>SUPER NOVA</h1>
-    <p>نظام إدارة شركة الشحن</p>
-  </header>
+<header>
+<h1>SUPER NOVA</h1>
+<p>نظام إدارة شركة الشحن</p>
+</header>
 
-  <main>
-    <section class="stats">
-      <div class="card">إجمالي الشحنات<strong id="total">0</strong></div>
-      <div class="card">تم التسليم<strong id="delivered">0</strong></div>
-      <div class="card">قيد التوصيل<strong id="pending">0</strong></div>
-    </section>
+<main>
+<div id="message" hidden></div>
 
-    <form id="shipmentForm">
-      <h2>تسجيل شحنة جديدة</h2>
-      <div class="fields">
-        <div>
-          <label for="sender">اسم العميل</label>
-          <input id="sender" required placeholder="اسم العميل أو التاجر">
-        </div>
-        <div>
-          <label for="receiver">اسم المستلم</label>
-          <input id="receiver" required placeholder="اسم المستلم">
-        </div>
-        <div>
-          <label for="phone">رقم هاتف المستلم</label>
-          <input id="phone" required type="tel" placeholder="01xxxxxxxxx">
-        </div>
-        <div>
-          <label for="address">عنوان التوصيل</label>
-          <input id="address" required placeholder="المحافظة والمنطقة والعنوان">
-        </div>
-        <div>
-          <label for="amount">مبلغ التحصيل بالجنيه</label>
-          <input id="amount" type="number" min="0" value="0" required>
-        </div>
-        <div>
-          <label for="status">حالة الشحنة</label>
-          <select id="status">
-            <option>جديدة</option>
-            <option>قيد التوصيل</option>
-            <option>تم التسليم</option>
-            <option>مرتجع</option>
-          </select>
-        </div>
-      </div>
-      <button type="submit">إضافة الشحنة</button>
-      <p class="notice">نسخة أولية للتجربة على نفس المتصفح والجهاز. البيانات ليست محفوظة على خادم مشترك.</p>
-    </form>
+<section id="login" class="panel">
+<h2>تسجيل الدخول</h2>
+<p class="notice">سجّل الدخول بالإيميل وكلمة السر المسجلين في Firebase Authentication.</p>
+<form id="loginForm">
+<label for="email">البريد الإلكتروني</label>
+<input id="email" type="email" autocomplete="username" required>
+<label for="password">كلمة السر</label>
+<input id="password" type="password" autocomplete="current-password" required>
+<button type="submit">تسجيل الدخول</button>
+</form>
+</section>
 
-    <section style="margin-top:24px">
-      <h2>سجل الشحنات</h2>
-      <input id="search" placeholder="ابحث باسم العميل أو المستلم أو رقم الهاتف">
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>رقم</th><th>العميل</th><th>المستلم</th>
-              <th>الهاتف</th><th>التحصيل</th><th>الحالة</th><th>حذف</th>
-            </tr>
-          </thead>
-          <tbody id="shipments"></tbody>
-        </table>
-      </div>
-    </section>
-  </main>
+<section id="app">
+<div style="text-align:left;margin-bottom:15px">
+<button id="logout" class="secondary" style="max-width:180px">تسجيل الخروج</button>
+</div>
 
-  <script>
-    const form = document.getElementById('shipmentForm');
-    const body = document.getElementById('shipments');
-    const search = document.getElementById('search');
-    let shipments = JSON.parse(localStorage.getItem('superNovaShipments') || '[]');
+<div class="stats">
+<div class="card">إجمالي الشحنات<strong id="total">0</strong></div>
+<div class="card">تم التسليم<strong id="delivered">0</strong></div>
+<div class="card">قيد التوصيل<strong id="pending">0</strong></div>
+<div class="card">المرتجعات<strong id="returned">0</strong></div>
+</div>
 
-    function render() {
-      const q = search.value.trim().toLowerCase();
-      const filtered = shipments.filter(s =>
-        [s.sender, s.receiver, s.phone].some(v =>
-          v.toLowerCase().includes(q)
-        )
-      );
+<form id="shipmentForm">
+<h2>تسجيل شحنة جديدة</h2>
+<div class="fields">
+<div><label for="sender">اسم العميل أو التاجر</label><input id="sender" required></div>
+<div><label for="receiver">اسم المستلم</label><input id="receiver" required></div>
+<div><label for="phone">رقم هاتف المستلم</label><input id="phone" type="tel" required></div>
+<div><label for="address">عنوان التوصيل</label><input id="address" required></div>
+<div><label for="amount">مبلغ التحصيل بالجنيه</label><input id="amount" type="number" min="0" step="0.01" value="0" required></div>
+<div><label for="status">حالة الشحنة</label>
+<select id="status">
+<option>جديدة</option>
+<option>قيد التوصيل</option>
+<option>تم التسليم</option>
+<option>مرتجع</option>
+</select></div>
+</div>
+<button type="submit">حفظ الشحنة</button>
+</form>
 
-      body.replaceChildren();
+<section style="margin-top:24px" class="panel">
+<h2>سجل الشحنات</h2>
+<input id="search" placeholder="ابحث بالعميل أو المستلم أو الهاتف أو رقم الشحنة">
+<div class="table-wrap">
+<table>
+<thead><tr>
+<th>رقم الشحنة</th><th>العميل</th><th>المستلم</th>
+<th>الهاتف</th><th>العنوان</th><th>التحصيل</th><th>الحالة</th><th>حذف</th>
+</tr></thead>
+<tbody id="shipments"></tbody>
+</table>
+</div>
+<p class="notice">تُحمّل البيانات من Firebase بعد تسجيل الدخول بنجاح.</p>
+</section>
+</section>
+</main>
 
-      filtered.forEach(s => {
-        const tr = document.createElement('tr');
-        [s.id, s.sender, s.receiver, s.phone,
-         Number(s.amount).toLocaleString('en-US') + ' ج.م',
-         s.status].forEach(value => {
-          const td = document.createElement('td');
-          td.textContent = value;
-          tr.appendChild(td);
-        });
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/13.0.0/firebase-app.js";
+import {
+  getAuth, signInWithEmailAndPassword,
+  onAuthStateChanged, signOut
+} from "https://www.gstatic.com/firebasejs/13.0.0/firebase-auth.js";
+import {
+  getDatabase, ref, push, onValue, remove
+} from "https://www.gstatic.com/firebasejs/13.0.0/firebase-database.js";
 
-        const action = document.createElement('td');
-        const btn = document.createElement('button');
-        btn.textContent = 'حذف';
-        btn.className = 'delete';
-        btn.onclick = () => {
-          if (confirm('متأكد إنك عايز تحذف الشحنة؟')) {
-            shipments = shipments.filter(x => x.id !== s.id);
-            save();
-          }
-        };
-        action.appendChild(btn);
-        tr.appendChild(action);
-        body.appendChild(tr);
-      });
+const firebaseConfig = {
+  apiKey: "AIzaSyA1GG2CJ-gCT0BhzFFemIhX1gNWkx1e3Q0",
+  authDomain: "super-nova-shipping.firebaseapp.com",
+  databaseURL: "https://super-nova-shipping-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "super-nova-shipping",
+  storageBucket: "super-nova-shipping.firebasestorage.app",
+  messagingSenderId: "1085409997914",
+  appId: "1:1085409997914:web:7832f0b453da17ba059463",
+  measurementId: "G-N20GL5N57J"
+};
 
-      document.getElementById('total').textContent = shipments.length;
-      document.getElementById('delivered').textContent =
-        shipments.filter(s => s.status === 'تم التسليم').length;
-      document.getElementById('pending').textContent =
-        shipments.filter(s => s.status === 'قيد التوصيل').length;
-    }
+const OWNER_UID = "rD95y2DvUWMhW6kX7VnONsnV49G2";
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
 
-    function save() {
-      localStorage.setItem('superNovaShipments', JSON.stringify(shipments));
-      render();
-    }
+const $ = id => document.getElementById(id);
+let shipments = [];
+let stopListening = null;
 
-    form.addEventListener('submit', e => {
-      e.preventDefault();
-      shipments.unshift({
-        id: Date.now().toString().slice(-8),
-        sender: document.getElementById('sender').value.trim(),
-        receiver: document.getElementById('receiver').value.trim(),
-        phone: document.getElementById('phone').value.trim(),
-        address: document.getElementById('address').value.trim(),
-        amount: document.getElementById('amount').value,
-        status: document.getElementById('status').value
-      });
-      save();
-      form.reset();
-      document.getElementById('amount').value = 0;
-      alert('تمت إضافة الشحنة بنجاح');
+function message(text, error = false) {
+  $("message").hidden = false;
+  $("message").textContent = text;
+  $("message").style.background = error ? "#fee2e2" : "#dcfce7";
+  $("message").style.color = error ? "#991b1b" : "#166534";
+}
+function clearMessage() {
+  $("message").hidden = true;
+}
+function showApp(user) {
+  $("login").style.display = user ? "none" : "block";
+  $("app").style.display = user ? "block" : "none";
+}
+function showError(error) {
+  const messages = {
+    "auth/invalid-credential": "الإيميل أو كلمة السر غير صحيحة.",
+    "auth/invalid-email": "صيغة الإيميل غير صحيحة.",
+    "auth/too-many-requests": "محاولات كثيرة. حاول لاحقًا.",
+    "auth/network-request-failed": "تحقق من اتصال الإنترنت.",
+    "PERMISSION_DENIED": "الوصول مرفوض. راجع قواعد Firebase.",
+    "permission_denied": "الوصول مرفوض. راجع قواعد Firebase."
+  };
+  message(messages[error.code] || ("حصل خطأ: " + error.message), true);
+}
+
+$("loginForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  clearMessage();
+  try {
+    await signInWithEmailAndPassword(auth, $("email").value.trim(), $("password").value);
+  } catch (error) {
+    showError(error);
+  }
+});
+
+$("logout").addEventListener("click", async () => {
+  try { await signOut(auth); }
+  catch (error) { showError(error); }
+});
+
+onAuthStateChanged(auth, user => {
+  if (stopListening) {
+    stopListening();
+    stopListening = null;
+  }
+  shipments = [];
+  render();
+
+  if (!user) {
+    showApp(null);
+    return;
+  }
+  if (user.uid !== OWNER_UID) {
+    showApp(null);
+    signOut(auth);
+    message("هذا الحساب غير مصرح له باستخدام النظام.", true);
+    return;
+  }
+
+  showApp(user);
+  clearMessage();
+  stopListening = onValue(ref(db, "shipments"), snapshot => {
+    shipments = [];
+    snapshot.forEach(child => {
+      shipments.push({ key: child.key, ...child.val() });
     });
-
-    search.addEventListener('input', render);
+    shipments.reverse();
     render();
-  </script>
+  }, error => showError(error));
+});
+
+function render() {
+  const q = $("search").value.trim().toLowerCase();
+  const filtered = shipments.filter(s =>
+    [s.id, s.sender, s.receiver, s.phone, s.address, s.status]
+      .some(v => String(v || "").toLowerCase().includes(q))
+  );
+
+  const tbody = $("shipments");
+  tbody.replaceChildren();
+
+  for (const s of filtered) {
+    const tr = document.createElement("tr");
+    const values = [
+      s.id, s.sender, s.receiver, s.phone, s.address,
+      Number(s.amount || 0).toLocaleString("en-US") + " ج.م",
+      s.status
+    ];
+
+    for (const value of values) {
+      const td = document.createElement("td");
+      td.textContent = value ?? "";
+      tr.appendChild(td);
+    }
+
+    const td = document.createElement("td");
+    const btn = document.createElement("button");
+    btn.className = "danger";
+    btn.textContent = "حذف";
+    btn.addEventListener("click", async () => {
+      if (!confirm("متأكد إنك عايز تحذف الشحنة؟")) return;
+      try {
+        await remove(ref(db, "shipments/" + s.key));
+        message("تم حذف الشحنة.");
+      } catch (error) { showError(error); }
+    });
+    td.appendChild(btn);
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+  }
+
+  $("total").textContent = shipments.length;
+  $("delivered").textContent = shipments.filter(s => s.status === "تم التسليم").length;
+  $("pending").textContent = shipments.filter(s => s.status === "قيد التوصيل").length;
+  $("returned").textContent = shipments.filter(s => s.status === "مرتجع").length;
+}
+
+$("shipmentForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  clearMessage();
+
+  if (!auth.currentUser || auth.currentUser.uid !== OWNER_UID) {
+    message("سجّل الدخول بالحساب المصرح له أولًا.", true);
+    return;
+  }
+
+  const amount = Number($("amount").value);
+  if (!Number.isFinite(amount) || amount < 0) {
+    message("اكتب مبلغ تحصيل صحيح.", true);
+    return;
+  }
+
+  const shipment = {
+    id: "SN-" + Date.now().toString().slice(-8),
+    sender: $("sender").value.trim(),
+    receiver: $("receiver").value.trim(),
+    phone: $("phone").value.trim(),
+    address: $("address").value.trim(),
+    amount,
+    status: $("status").value,
+    createdAt: Date.now()
+  };
+
+  try {
+    await push(ref(db, "shipments"), shipment);
+    $("shipmentForm").reset();
+    $("amount").value = "0";
+    message("تم حفظ الشحنة في قاعدة البيانات بنجاح.");
+  } catch (error) { showError(error); }
+});
+
+$("search").addEventListener("input", render);
+</script>
 </body>
-  </html>
+</html>
