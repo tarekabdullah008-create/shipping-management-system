@@ -30,6 +30,28 @@ body{background:radial-gradient(ellipse at 12% 0%,#243657 0,transparent 35%),rad
 @media(max-width:900px){.launcher-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:520px){.launcher-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.launcher-tile{min-height:104px;padding:12px 6px}.launcher-icon{width:38px;height:38px}}
 
+
+/* Mobile drawer and shipment cards */
+.menu-toggle{display:none}
+.drawer-backdrop{position:fixed;inset:0;background:#050914aa;z-index:79}
+.shipment-cards{display:none}
+.shipment-card{border:1px solid var(--line);border-radius:14px;padding:13px;margin:10px 0;background:#fff;box-shadow:0 5px 18px #0b10200a}
+.shipment-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.shipment-card h4{margin:0 0 5px;font-size:15px;overflow-wrap:anywhere}
+.shipment-card .meta{font-size:12px;color:var(--muted);line-height:1.7;overflow-wrap:anywhere}
+.shipment-card .moneyrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0;padding:9px;background:#f7f8fb;border-radius:10px}
+.shipment-card .moneyrow b{display:block;margin-top:3px}
+@media(max-width:900px){
+ .menu-toggle{display:inline-flex}
+ .layout{display:block;padding:10px}
+ .sidebar{display:flex;flex-direction:column;position:fixed;z-index:80;top:0;right:0;bottom:0;width:min(290px,85vw);height:100dvh;overflow-y:auto;overflow-x:hidden;border-radius:0 0 0 0;padding:16px;transform:translateX(110%);transition:transform .22s ease;box-shadow:-15px 0 40px #0003}
+ .sidebar.open{transform:translateX(0)}
+ .navbtn{width:100%;min-width:0;margin:3px 0;padding:13px}
+ .tablewrap{display:none}
+ .shipment-cards{display:block}
+ body.drawer-open{overflow:hidden}
+}
+@media(min-width:901px){.drawer-backdrop{display:none!important}}
 @media(max-width:900px){.layout{grid-template-columns:1fr;padding:10px}.sidebar{position:static;display:flex;gap:4px;overflow:auto;padding:7px}.navbtn{min-width:max-content;width:auto;margin:0;padding:10px}.navbtn .ico{width:auto}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.cols2{grid-template-columns:1fr}.topbar{padding:13px}.wrap{padding:10px}}
 @media(max-width:520px){.formgrid{grid-template-columns:1fr}.field.full{grid-column:auto}.stats{gap:9px}.stat{padding:13px}.stat .num{font-size:22px}.panel{padding:13px}.pagehead h2{font-size:20px}.brand h1{font-size:17px}.top-actions .btn{padding:8px 10px}.checkgrid{grid-template-columns:1fr}}
 @media print{body{background:#fff}.topbar,.sidebar,.pagehead,.no-print,.foot{display:none!important}.layout{display:block;padding:0}.panel,.card{box-shadow:none;border:0}.invoice{border:0}.wrap{padding:0}}
@@ -52,7 +74,7 @@ body{background:radial-gradient(ellipse at 12% 0%,#243657 0,transparent 35%),rad
    <div class="warning">إنشاء الحساب لا يمنح صلاحية الدخول للنظام تلقائيًا. الطلب يحتاج موافقة المالك.</div>
    <div class="formgrid" style="margin-top:12px">
     <div class="field"><label>الاسم بالكامل</label><input id="regName" required maxlength="100"></div>
-    <div class="field"><label>نوع الحساب المطلوب</label><select id="regRole" required><option value="company">شركة / تاجر</option><option value="brand">براند</option><option value="rider">مندوب</option><option value="manager">مدير مساعد</option><option value="owner">طلب مدير النظام</option></select></div>
+    <div class="field"><label>نوع الحساب المطلوب</label><select id="regRole" required><option value="company">شركة / تاجر</option><option value="brand">براند</option><option value="rider">مندوب</option><option value="manager">مدير مساعد</option></select></div>
     <div class="field full"><label>البريد الإلكتروني</label><input id="regEmail" type="email" required autocomplete="email"></div>
     <div class="field full"><label>كلمة المرور (8 أحرف على الأقل)</label><input id="regPassword" type="password" minlength="8" required autocomplete="new-password"></div>
     <div class="field full"><label>رقم الهاتف (اختياري)</label><input id="regPhone" type="tel"></div>
@@ -66,10 +88,10 @@ body{background:radial-gradient(ellipse at 12% 0%,#243657 0,transparent 35%),rad
 <div id="appScreen" class="hidden">
  <header class="topbar">
   <div class="brand"><div class="logo"><img src="super-nova-logo.jpg" alt="SUPER NOVA" onerror="this.style.display='none'"><span>SN</span></div><div><h1>SUPER NOVA</h1><p>منظومة إدارة الشحن • <span id="roleLabel">لوحة التحكم</span></p></div></div>
-  <div class="top-actions"><span id="userLabel" class="small"></span><button class="btn light" id="refreshBtn">↻ تحديث</button><button class="btn gold" id="logoutBtn">خروج</button></div>
+  <div class="top-actions"><button class="btn light menu-toggle" id="menuToggle" type="button" aria-label="فتح القائمة" aria-expanded="false">☰ القائمة</button><span id="userLabel" class="small"></span><button class="btn light" id="refreshBtn">↻ تحديث</button><button class="btn gold" id="logoutBtn">خروج</button></div>
  </header>
  <div class="layout">
-  <aside class="sidebar" id="nav"></aside>
+  <div class="drawer-backdrop hidden" id="drawerBackdrop"></div><aside class="sidebar" id="nav" aria-label="القائمة الرئيسية"></aside>
   <main class="content">
    <div id="globalNotice"></div>
    <section id="page-dashboard" class="page"></section>
@@ -101,6 +123,8 @@ const firebaseConfig = {
 };
 const OWNER_UID = "rD95y2DvUWMhW6kX7VnONsnV49G2";
 const app = initializeApp(firebaseConfig), auth = getAuth(app), db = getDatabase(app);
+const registrationApp = initializeApp(firebaseConfig, "superNovaRegistration");
+const registrationAuth = getAuth(registrationApp), registrationDb = getDatabase(registrationApp);
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const money = n => (Number(n)||0).toLocaleString("ar-EG",{maximumFractionDigits:2})+" ج.م";
@@ -110,7 +134,7 @@ let currentUser=null, profile=null, role="guest", activePage="dashboard", cache=
 const roleNames={owner:"مدير النظام",manager:"مدير مساعد",rider:"مندوب",company:"شركة / تاجر",brand:"براند"};
 const statusNames={new:"جديدة",received:"تم الاستلام",in_delivery:"قيد التوصيل",delivered:"تم التسليم",return_requested:"مرتجع مطلوب",return_received:"تم استلام المرتجع",reattempt:"إعادة التوصيل",failed:"تعذر التسليم",cancelled:"ملغاة"};
 const permissionsList=[["shipments","إدارة الشحنات"],["people","إدارة المندوبين والحسابات"],["accounts","حسابات المندوبين"],["finance","الإيرادات والمصروفات"],["reports","التقارير"],["settings","إعدادات النظام"]];
-const isOwner=()=>uid()===OWNER_UID || role==="owner";
+const isOwner=()=>uid()===OWNER_UID;
 const can=p=>isOwner() || (role==="manager" && profile?.active===true && profile?.permissions?.[p]===true);
 const isCompany=()=>role==="company"||role==="brand";
 const notice=(msg,type="info",target="globalNotice")=>{const el=$(target);if(el)el.innerHTML=`<div class="notice ${type}">${esc(msg)}</div>`;};
@@ -119,6 +143,13 @@ const readPath=async path=>(await get(ref(db,path))).val();
 const writeAudit=async(action,shipmentId,details={})=>{try{const entry={action,shipmentId:shipmentId||"",details,byUid:uid(),byName:profile?.name||currentUser?.email||"مستخدم",at:Date.now()};await set(push(ref(db,`audit/${companyScope()}`)),entry);}catch(e){console.warn("audit",e)}};
 const companyScope=()=>profile?.companyUid || (isCompany()?uid():OWNER_UID);
 const allShipments=()=>Object.entries(cache.shipments||{}).map(([id,s])=>({id,...s}));
+// Private per-rider index: riders read only /riderShipments/{theirUid}.
+async function syncRiderShipment(shipmentId, shipment){
+ const oldRiderUid=shipment?._previousRiderUid||"";
+ const newRiderUid=shipment?.riderUid||"";
+ if(oldRiderUid && oldRiderUid!==newRiderUid) await remove(ref(db,`riderShipments/${oldRiderUid}/${shipmentId}`));
+ if(newRiderUid){const copy={...shipment};delete copy._previousRiderUid;await set(ref(db,`riderShipments/${newRiderUid}/${shipmentId}`),copy);}
+}
 const visibleShipments=()=>allShipments().filter(s=>{
  if(isOwner())return true;
  if(role==="manager")return can("shipments") && s.companyUid===companyScope();
@@ -141,7 +172,13 @@ function buildNav(){
  if(role==="rider"||isCompany())items.push(["myaccount","◉","حسابي"]);
  if(isOwner())items.push(["applications","☷","طلبات التسجيل"]);
  $("nav").innerHTML=items.map(([p,i,t])=>`<button class="navbtn ${activePage===p?"active":""}" data-page="${p}"><span class="ico">${i}</span>${t}</button>`).join("");
- $("nav").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>showPage(b.dataset.page)));
+ $("nav").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{showPage(b.dataset.page);closeDrawer();}));
+}
+function closeDrawer(){
+ $("nav")?.classList.remove("open");$("drawerBackdrop")?.classList.add("hidden");document.body.classList.remove("drawer-open");$("menuToggle")?.setAttribute("aria-expanded","false");
+}
+function toggleDrawer(){
+ const opened=$("nav")?.classList.toggle("open");$("drawerBackdrop")?.classList.toggle("hidden",!opened);document.body.classList.toggle("drawer-open",!!opened);$("menuToggle")?.setAttribute("aria-expanded",String(!!opened));
 }
 function pageHead(title,sub,actions=""){return `<div class="pagehead"><div><h2>${title}</h2><p>${sub||""}</p></div><div class="top-actions no-print">${actions}</div></div>`}
 function stat(label,num,hint=""){return `<div class="card stat"><div class="label">${label}</div><div class="num">${num}</div><div class="hint">${hint}</div></div>`}
@@ -176,13 +213,19 @@ function shipmentRow(s){
  const buttons=`<div class="mini-actions"><button class="btn light" data-action="viewShipment" data-id="${esc(s.id)}">عرض</button>${ownerEdit?`<button class="btn light" data-action="editShipment" data-id="${esc(s.id)}">تعديل</button>`:""}<button class="btn light" data-action="invoice" data-id="${esc(s.id)}">فاتورة</button></div>`;
  return `<tr><td><b>${esc(s.trackingNo||s.id)}</b><div class="small muted">${esc(dateText(s.createdAt))}</div></td><td>${esc(s.customerName||"—")}<div class="small muted">${esc(s.phone||"")}</div></td><td>${esc(s.address||"—")}</td><td>${esc(s.riderName||"غير معين")}</td><td><span class="pill ${statusClass(s.status)}">${esc(getStatusLabel(s.status))}</span></td><td>${money(s.amount)}</td><td>${money(s.shippingFee)}</td><td>${buttons}</td></tr>`;
 }
+function shipmentCard(s){
+ const editable=isOwner()||can("shipments");
+ const actions=`<div class="mini-actions"><button class="btn light" data-action="viewShipment" data-id="${esc(s.id)}">عرض</button>${editable?`<button class="btn light" data-action="editShipment" data-id="${esc(s.id)}">تعديل</button>`:""}<button class="btn light" data-action="invoice" data-id="${esc(s.id)}">فاتورة</button></div>`;
+ const phone=String(s.phone||"").replace(/[^0-9+]/g,"");
+ return `<article class="shipment-card"><div class="shipment-card-top"><div><h4>${esc(s.trackingNo||s.id)}</h4><div class="meta">${esc(dateText(s.createdAt))}</div></div><span class="pill ${statusClass(s.status)}">${esc(getStatusLabel(s.status))}</span></div><hr style="border:0;border-top:1px solid var(--line);margin:10px 0"><b>${esc(s.customerName||"—")}</b><div class="meta">${esc(s.phone||"")}<br>${esc(s.address||"—")}<br>المندوب: ${esc(s.riderName||"غير معين")}</div><div class="moneyrow"><div class="small muted">التحصيل<b>${money(s.amount)}</b></div><div class="small muted">رسوم الشحن<b>${money(s.shippingFee)}</b></div></div><div class="mini-actions">${phone?`<a class="btn light" href="tel:${esc(phone)}">اتصال</a><a class="btn light" target="_blank" rel="noopener" href="https://wa.me/${esc(phone.replace(/^0/,"20"))}">واتساب</a>`:""}${actions}</div></article>`;
+}
 function renderShipments(){
  const ss=visibleShipments().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
  $("page-shipments").innerHTML=pageHead("الشحنات","تسجيل ومتابعة وتعديل حالات الشحنات",can("shipments")?'<button class="btn gold" data-action="newShipment">+ شحنة جديدة</button>':"")+
- `<div class="panel"><div class="toolbar"><input id="shipSearch" placeholder="بحث برقم الشحنة أو الاسم أو الهاتف"><select id="shipStatus"><option value="">كل الحالات</option>${Object.entries(statusNames).map(([k,v])=>`<option value="${k}">${v}</option>`).join("")}</select><button class="btn light" id="exportShipments">تصدير CSV</button><button class="btn light" id="importToggle">استيراد CSV</button><input id="csvFile" type="file" accept=".csv,text/csv" class="hidden"></div><div id="shipTable">${table(["رقم الشحنة / التاريخ","العميل / الهاتف","العنوان","المندوب","الحالة","التحصيل","الشحن","إجراءات"],ss.map(shipmentRow).join(""))}</div></div>
+ `<div class="panel"><div class="toolbar"><input id="shipSearch" placeholder="بحث برقم الشحنة أو الاسم أو الهاتف"><select id="shipStatus"><option value="">كل الحالات</option>${Object.entries(statusNames).map(([k,v])=>`<option value="${k}">${v}</option>`).join("")}</select><button class="btn light" id="exportShipments">تصدير CSV</button><button class="btn light" id="importToggle">استيراد CSV</button><input id="csvFile" type="file" accept=".csv,text/csv" class="hidden"></div><div id="shipTable">${table(["رقم الشحنة / التاريخ","العميل / الهاتف","العنوان","المندوب","الحالة","التحصيل","الشحن","إجراءات"],ss.map(shipmentRow).join(""))}</div><div id="shipCards" class="shipment-cards">${ss.map(shipmentCard).join("")||'<div class="empty">مفيش شحنات للعرض</div>'}</div></div>
  <div class="panel"><h3>مسح الباركود / QR</h3><p class="muted small">اكتب أو امسح رقم التتبع في خانة البحث. دعم الكاميرا يعتمد على متصفح الجهاز؛ لا يتم تشغيل الكاميرا إلا بطلب صريح.</p><div class="toolbar"><input id="scanInput" placeholder="رقم التتبع"><button class="btn dark" id="scanFind">بحث عن الشحنة</button><button class="btn light" id="cameraScan">تشغيل قارئ الكاميرا</button></div><video id="scanVideo" class="hidden" playsinline style="width:100%;max-width:400px;border-radius:12px"></video></div>`;
  const search=$("shipSearch"), status=$("shipStatus");
- const filter=()=>{const q=search.value.trim().toLowerCase(), st=status.value;const rows=ss.filter(s=>(!st||s.status===st)&&(!q||[s.id,s.trackingNo,s.customerName,s.phone,s.address].some(v=>String(v||"").toLowerCase().includes(q))));$("shipTable").innerHTML=table(["رقم الشحنة / التاريخ","العميل / الهاتف","العنوان","المندوب","الحالة","التحصيل","الشحن","إجراءات"],rows.map(shipmentRow).join(""));bindCommon($("shipTable"));};
+ const filter=()=>{const q=search.value.trim().toLowerCase(), st=status.value;const rows=ss.filter(s=>(!st||s.status===st)&&(!q||[s.id,s.trackingNo,s.customerName,s.phone,s.address].some(v=>String(v||"").toLowerCase().includes(q))));$("shipTable").innerHTML=table(["رقم الشحنة / التاريخ","العميل / الهاتف","العنوان","المندوب","الحالة","التحصيل","الشحن","إجراءات"],rows.map(shipmentRow).join(""));$("shipCards").innerHTML=rows.map(shipmentCard).join("")||'<div class="empty">مفيش شحنات مطابقة للبحث</div>';bindCommon($("shipTable"));bindCommon($("shipCards"));};
  search.addEventListener("input",filter);status.addEventListener("change",filter);
  $("exportShipments").onclick=()=>downloadCSV("super-nova-shipments.csv",ss.map(s=>({trackingNo:s.trackingNo||s.id,customerName:s.customerName,phone:s.phone,address:s.address,amount:s.amount,shippingFee:s.shippingFee,status:getStatusLabel(s.status),riderName:s.riderName})));
  $("importToggle").onclick=()=>$("csvFile").click();
@@ -212,15 +255,15 @@ function shipmentForm(s={}){
  </div><div class="actions"><button class="btn gold" type="submit">💾 حفظ ${editing?"التعديلات":"الشحنة"}</button><button class="btn light" type="button" id="cancelShip">إلغاء</button></div><p class="muted small">لن تُحفظ البيانات إلا بعد نجاح Firebase؛ انتظر رسالة التأكيد.</p></form>`);
  $("cancelShip").onclick=closeModal;
  $("shipmentForm").onsubmit=async e=>{e.preventDefault();const fd=new FormData(e.target),data=Object.fromEntries(fd.entries());const rider=allProfiles().find(p=>p.uid===data.riderUid);const payload={customerName:data.customerName.trim(),phone:data.phone.trim(),address:data.address.trim(),amount:Number(data.amount||0),shippingFee:Number(data.shippingFee||0),riderUid:data.riderUid||"",riderName:rider?.name||"",status:data.status||"new",details:data.details||"",companyUid:s.companyUid||companyScope(),companyName:s.companyName||profile?.companyName||"SUPER NOVA",updatedAt:Date.now(),updatedBy:uid()};
- try{if(editing){await update(ref(db,`shipments/${s.id}`),payload);await writeAudit("تعديل الشحنة",s.id,{reason:data.changeReason||"",from:s.status,to:payload.status});}else{payload.createdAt=Date.now();payload.createdBy=uid();payload.trackingNo="SN-"+Date.now().toString().slice(-9);const newRef=push(ref(db,"shipments"));await set(newRef,payload);await writeAudit("إنشاء شحنة",newRef.key,{trackingNo:payload.trackingNo});}closeModal();notice("تم الحفظ بنجاح في قاعدة البيانات.","ok");await reloadData();renderPage("shipments");}catch(err){notice("فشل الحفظ: "+friendlyError(err),"error");}
+ try{if(editing){const previousRiderUid=s.riderUid||"";await update(ref(db,`shipments/${s.id}`),payload);await syncRiderShipment(s.id,{...payload,_previousRiderUid:previousRiderUid});await writeAudit("تعديل الشحنة",s.id,{reason:data.changeReason||"",from:s.status,to:payload.status});}else{payload.createdAt=Date.now();payload.createdBy=uid();payload.trackingNo="SN-"+Date.now().toString().slice(-9);const newRef=push(ref(db,"shipments"));await set(newRef,payload);await syncRiderShipment(newRef.key,payload);await writeAudit("إنشاء شحنة",newRef.key,{trackingNo:payload.trackingNo});}closeModal();notice("تم الحفظ بنجاح في قاعدة البيانات.","ok");await reloadData();renderPage("shipments");}catch(err){notice("فشل الحفظ: "+friendlyError(err),"error");}
  };
 }
-async function saveShipment(s){const r=push(ref(db,"shipments"));await set(r,s);await writeAudit("استيراد شحنة",r.key,{});}
+async function saveShipment(s){const r=push(ref(db,"shipments"));await set(r,s);await syncRiderShipment(r.key,s);await writeAudit("استيراد شحنة",r.key,{});}
 async function changeStatus(s,newStatus){
- if(role==="rider" && s.riderUid!==uid()){notice("لا يمكنك تعديل شحنة مش مسندة ليك.","error");return;}
- if(!isOwner()&&!can("shipments")&&role!=="rider"){notice("مش مسموح بتغيير حالة الشحنة.","error");return;}
+ if(role==="rider"){notice("عرض الشحنات متاح، لكن تغيير الحالة للمندوب يحتاج تفعيل صلاحية آمنة في Firebase قبل استخدامه.","info");return;}
+ if(!isOwner()&&!can("shipments")){notice("مش مسموح بتغيير حالة الشحنة.","error");return;}
  const reason=prompt("اكتب ملاحظة أو سبب الإجراء (اختياري):")||"";
- try{await update(ref(db,`shipments/${s.id}`),{status:newStatus,updatedAt:Date.now(),updatedBy:uid(),lastStatusNote:reason});await writeAudit("تغيير حالة الشحنة",s.id,{from:s.status,to:newStatus,reason});notice("تم تحديث حالة الشحنة بنجاح.","ok");await reloadData();renderPage(activePage);}catch(e){notice("فشل تحديث الحالة: "+friendlyError(e),"error");}
+ try{const patch={status:newStatus,updatedAt:Date.now(),updatedBy:uid(),lastStatusNote:reason};await update(ref(db,`shipments/${s.id}`),patch);await syncRiderShipment(s.id,{...s,...patch});await writeAudit("تغيير حالة الشحنة",s.id,{from:s.status,to:newStatus,reason});notice("تم تحديث حالة الشحنة بنجاح.","ok");await reloadData();renderPage(activePage);}catch(e){notice("فشل تحديث الحالة: "+friendlyError(e),"error");}
 }
 function invoiceView(s){openModal("فاتورة الشحن",`<div class="invoice" id="printInvoice"><div class="brand" style="justify-content:center;color:#111"><div class="logo">SN</div><div><h1 style="color:#111">SUPER NOVA</h1><p style="color:#555">فاتورة / بوليصة شحن</p></div></div><h2>رقم التتبع: ${esc(s.trackingNo||s.id)}</h2><hr><p><b>العميل:</b> ${esc(s.customerName||"—")}</p><p><b>الهاتف:</b> ${esc(s.phone||"—")}</p><p><b>العنوان:</b> ${esc(s.address||"—")}</p><p><b>المندوب:</b> ${esc(s.riderName||"غير معين")}</p><p><b>الحالة:</b> ${esc(getStatusLabel(s.status))}</p><hr><p><b>قيمة التحصيل:</b> ${money(s.amount)}</p><p><b>رسوم الشحن:</b> ${money(s.shippingFee)}</p><p><b>التفاصيل:</b> ${esc(s.details||"—")}</p><p class="small">تاريخ الإنشاء: ${esc(dateText(s.createdAt))}</p><p style="text-align:center">شكرًا لاستخدام SUPER NOVA</p></div><div class="actions no-print"><button class="btn gold" id="printNow">🖨️ طباعة الفاتورة</button></div>`);$("printNow").onclick=()=>window.print();}
 function shipmentDetails(s){
@@ -312,7 +355,9 @@ async function reloadData(){
  if(!uid())return;
  const tasks=[["shipments","shipments"],["profiles","profiles"],["applications","applications"],["riderPayments","riderPayments"],["finances","finances"]];
  const allowed={shipments:isOwner()||can("shipments")||role==="rider"||isCompany(),profiles:isOwner()||can("people"),applications:isOwner(),riderPayments:isOwner()||can("accounts")||role==="rider",finances:isOwner()||can("finance")};
- for(const [key,path] of tasks){if(!allowed[key]){cache[key]={};continue;}try{let val;if(key==="shipments"&&!isOwner()&&!can("shipments")){const field=role==="rider"?"riderUid":"companyUid";val=await readPath(path);val=Object.fromEntries(Object.entries(val||{}).filter(([id,s])=>s[field]===uid()));}else if(key==="riderPayments"&&role==="rider"){val=await readPath(path);val=Object.fromEntries(Object.entries(val||{}).filter(([id,p])=>p.riderUid===uid()));}else if(key==="finances"&&!isOwner()&&!can("finance")){val={};}else val=await readPath(path);cache[key]=val||{};}catch(e){console.warn(key,e);cache[key]={};}}
+ for(const [key,path] of tasks){if(!allowed[key]){cache[key]={};continue;}try{let val;if(key==="shipments"&&role==="rider"){val=await readPath(`riderShipments/${uid()}`);}else if(key==="shipments"&&!isOwner()&&!can("shipments")){val=await readPath(path);val=Object.fromEntries(Object.entries(val||{}).filter(([id,s])=>s.companyUid===uid()));}else if(key==="riderPayments"&&role==="rider"){val=await readPath(path);val=Object.fromEntries(Object.entries(val||{}).filter(([id,p])=>p.riderUid===uid()));}else if(key==="finances"&&!isOwner()&&!can("finance")){val={};}else val=await readPath(path);cache[key]=val||{};}catch(e){console.warn(key,e);cache[key]={};}}
+ // One-time-style reconciliation on owner login: fill private indexes for existing shipments.
+ if(isOwner()){for(const [id,shipment] of Object.entries(cache.shipments||{})){if(shipment?.riderUid){try{await set(ref(db,`riderShipments/${shipment.riderUid}/${id}`),shipment);}catch(e){console.warn("rider index sync",id,e);}}}}
 }
 function stopListeners(){unsubs.forEach(fn=>{try{fn()}catch{}});unsubs=[];}
 function listenPath(path,key,filterFn=null){
@@ -321,7 +366,7 @@ function listenPath(path,key,filterFn=null){
 }
 async function startApp(user){
  currentUser=user;profile=null;role=user.uid===OWNER_UID?"owner":"";
- if(role!=="owner"){try{profile=await readPath(`profiles/${user.uid}`);}catch{}if(!profile||profile.active!==true){$("appScreen").classList.add("hidden");$("authScreen").classList.remove("hidden");notice("حسابك لسه مش متفعّل أو طلب التسجيل لم تتم الموافقة عليه. تواصل مع مدير النظام.","info","authNotice");await signOut(auth);return;}role=profile.role||"guest";}
+ if(role!=="owner"){try{profile=await readPath(`profiles/${user.uid}`);}catch{}if(!profile||profile.active!==true){$("appScreen").classList.add("hidden");$("authScreen").classList.remove("hidden");notice("حسابك لسه مش متفعّل أو طلب التسجيل لم تتم الموافقة عليه. تواصل مع مدير النظام.","info","authNotice");await signOut(auth);return;}role=profile.role||"guest";if(role==="owner"){await signOut(auth);notice("صلاحية مدير النظام مخصصة للحساب الأساسي فقط.","error","authNotice");return;}}
  if(!["owner","manager","rider","company","brand"].includes(role)){await signOut(auth);notice("نوع الحساب غير معتمد.","error","authNotice");return;}
  if(role==="owner")profile={name:"مدير النظام",email:user.email,companyName:"SUPER NOVA",active:true,permissions:{}};
  if(profile.active===false){await signOut(auth);notice("الحساب موقوف. راجع مدير النظام.","error","authNotice");return;}
@@ -331,14 +376,14 @@ async function startApp(user){
 $("loginTab").onclick=()=>{$("loginTab").classList.add("active");$("registerTab").classList.remove("active");$("loginForm").classList.remove("hidden");$("registerForm").classList.add("hidden");clearNotice("authNotice");};
 $("registerTab").onclick=()=>{$("registerTab").classList.add("active");$("loginTab").classList.remove("active");$("registerForm").classList.remove("hidden");$("loginForm").classList.add("hidden");clearNotice("authNotice");};
 $("loginForm").onsubmit=async e=>{e.preventDefault();const b=e.submitter;b.disabled=true;try{await signInWithEmailAndPassword(auth,$("loginEmail").value.trim(),$("loginPassword").value);clearNotice("authNotice");}catch(err){notice(friendlyError(err),"error","authNotice");}finally{b.disabled=false;}};
-$("registerForm").onsubmit=async e=>{e.preventDefault();const b=e.submitter;b.disabled=true;try{const name=$("regName").value.trim(),email=$("regEmail").value.trim(),password=$("regPassword").value,requestedRole=$("regRole").value,companyName=$("regCompany").value.trim(),phone=$("regPhone").value.trim();const cred=await createUserWithEmailAndPassword(auth,email,password);await set(ref(db,`applications/${cred.user.uid}`),{name,email,phone,requestedRole,companyName,status:"pending",createdAt:Date.now()});await signOut(auth);notice("تم إنشاء الحساب وإرسال طلبك. استنى موافقة مدير النظام قبل الدخول.","ok","authNotice");$("loginTab").click();}catch(err){notice(friendlyError(err),"error","authNotice");}finally{b.disabled=false;}};
+$("registerForm").onsubmit=async e=>{e.preventDefault();const b=e.submitter;b.disabled=true;try{const name=$("regName").value.trim(),email=$("regEmail").value.trim(),password=$("regPassword").value,requestedRole=$("regRole").value,companyName=$("regCompany").value.trim(),phone=$("regPhone").value.trim();if(requestedRole==="owner")throw new Error("طلب مدير النظام غير متاح من التسجيل العام.");const cred=await createUserWithEmailAndPassword(registrationAuth,email,password);try{await set(ref(registrationDb,`applications/${cred.user.uid}`),{name,email,phone,requestedRole,companyName,status:"pending",createdAt:Date.now()});}catch(writeErr){throw new Error("تم إنشاء الحساب لكن تعذر حفظ طلب الموافقة في قاعدة البيانات. تواصل مع مدير النظام لإكمال الطلب. "+friendlyError(writeErr));}finally{await signOut(registrationAuth).catch(()=>{});}notice("تم إنشاء الحساب وإرسال طلبك. استنى موافقة مدير النظام قبل الدخول.","ok","authNotice");$("loginTab").click();}catch(err){notice(friendlyError(err),"error","authNotice");}finally{b.disabled=false;}};
 $("resetPassword").onclick=async()=>{const email=$("loginEmail").value.trim();if(!email){notice("اكتب بريدك الإلكتروني الأول في خانة الدخول.","error","authNotice");return;}try{await sendPasswordResetEmail(auth,email);notice("لو البريد مسجل، هتوصلك رسالة إعادة تعيين كلمة المرور.","ok","authNotice");}catch(e){notice(friendlyError(e),"error","authNotice");}};
 $("logoutBtn").onclick=()=>signOut(auth);
 $("refreshBtn").onclick=async()=>{await reloadData();renderPage(activePage);notice("تم تحديث البيانات الظاهرة.","ok");};
 onAuthStateChanged(auth,user=>{stopListeners();if(!user){currentUser=null;profile=null;role="guest";$("appScreen").classList.add("hidden");$("authScreen").classList.remove("hidden");return;}startApp(user).then(()=>{if(!uid())return;
  // Real-time subscriptions. Rules remain the source of security; UI filtering alone is not security.
  if(isOwner()||can("shipments"))listenPath("shipments","shipments");
- else if(role==="rider")listenPath("shipments","shipments",s=>s.riderUid===uid());
+ else if(role==="rider")listenPath(`riderShipments/${uid()}`,"shipments");
  else if(isCompany())listenPath("shipments","shipments",s=>s.companyUid===uid());
  if(isOwner()||can("people"))listenPath("profiles","profiles");
  if(isOwner())listenPath("applications","applications");
